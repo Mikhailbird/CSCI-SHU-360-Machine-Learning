@@ -338,7 +338,55 @@ From the plots we can see that the values of $\lambda$ that result in both good 
 From the plots we can see that the values of $\lambda$ that result in both good precision and recall are $\lambda \in [73.70493900078691, 663.3444510070822]$
 
 \subsection*{2.5 Solution}
+\subsubsection*{Modification to the original implementation}
+(1) In the updated implementation, y (target) are transformed into scipy.sparse matrices and $X_train$ has already been transformed during the data processing process so that
+they only store the non-zero elements along with their row and column indices, which can reduce memory usage a lot. \\
+(2) In updated lasso, a new way to calculate $c_j$ is introduced, and now we use $\rho_j$ for soft thresholding implementation.
+originally, $c_j$ is updated as
+\[c_j = X^T_j \cdot (y - (X \cdot w - X_j w_j))\]
+and this can be transformed into $\rho_j$ to avoid recalculating X $\cdot$ w as we can break $c_j$ down as
+\[\rho_j = X^T_j \cdot r + z_j \cdot w_j\] where $z_j = X^T_j X_j$. Therefore, we can calculate $c_j$ in a more efficient way.\\
+(3) In the original implementation, during coordinate descent, the residual was calculated in every iteration, which is quite time-consuming.
+However, in our updated version, I only calculated residual at the very beginning outside the inner loop. Moreover, when updating w[j], I avoid calculating entire X.dot(w) by updating only those entries in the residual affected by changes in w[j] (see function $updated_lasso$ in the code file).
 
+\subsubsection*{Plots on training RMSE \& validation RMSE v.s. $\lambda$ values}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\linewidth]{2.5.1.png}
+    % \caption{}
+    % \label{fig: 6.1} 
+\end{figure}
 
-
+\subsubsection*{Lasso solution path}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\linewidth]{2.5.2.png}
+    % \caption{}
+    % \label{fig: 6.1} 
+\end{figure}
+\newpage
+\subsubsection*{Report}
+According to my result, the best $\lambda$ value is 2.0830660007183326 and the corresponding testing RMSE is 1.0458263808250714.\\
+The top-10 features (words in comments) with the largest magnitude in the lasso solution w when using the best $\lambda$ value are
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{|c|c|}
+    \hline
+    \textbf{Feature} & \textbf{Weight} \\
+    \hline
+    great     & 19.598197620019985 \\
+    not       & -17.418697434531826 \\
+    best      & 17.407623494338292 \\
+    amazing   & 14.494656180063801 \\
+    rude      & -12.446925025272716 \\
+    love      & 12.151673818860884 \\
+    the worst & -12.091188158926947 \\
+    delicious & 11.982090500844862 \\
+    awesome   & 11.296925554692555 \\
+    horrible  & -10.719387727114022 \\
+    \hline
+    \end{tabular}
+    \caption{Top 10 Lasso-selected features and their weights}
+    \end{table}
+The reason why they are meaningful because the selected features are all adjectives that can reflect the attitude of the comment. Moreover, their weights can also reflect to what extent, the comment has certain feelings.
 \end{document}
